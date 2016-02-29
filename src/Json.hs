@@ -1,27 +1,34 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Json where
 
-
-import Data.Aeson             ((.:), (.:?), decode, FromJSON(..), Value(..))
+import Data.Text (Text)
+import Data.Aeson
 import Control.Applicative    ((<$>), (<*>))
-import qualified Data.ByteString.Lazy.Char8 as BS
+import Data.Maybe (fromMaybe)
+import Data.Map
 
-data Paste = Paste { getLines    :: [Integer]
-                   , getURL      :: Inner
+
+data Words = Words { vocabulary    :: [Wordd]
+                   } deriving (Show)
+data Wordd = Wordd {
+                  word       :: String,
+                  gender     :: Text
                    } deriving (Show)
 
-data Inner = Inner { getA        :: String
-                    , getB       :: Integer
-                    } deriving (Show)
-
-instance FromJSON Paste where
+instance FromJSON Words where
   parseJSON (Object v) =
-    Paste <$>
-    (v .: "lines")                  <*>
-    (v .: "url")
-
-instance FromJSON Inner where
+    Words <$>
+    (v .: "vocab_overview")
+instance FromJSON Wordd where
   parseJSON (Object v) =
-    Inner <$>
-    (v .: "a")                  <*>
-    (v .: "b")
+    Wordd<$>
+--    (v .: "normalized_string")     <*>
+    (v .: "word_string")     <*>
+    (fromMaybe "X" <$> v .: "gender")
+
+data Transl = Transl { trans :: Map String [String]} deriving (Show)
+
+instance FromJSON Transl where
+    parseJSON val = Transl <$> parseJSON val
+
+

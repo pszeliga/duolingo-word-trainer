@@ -8,4 +8,5 @@ executable duolingo-haskell
   hs-source-dirs:  src
   build-depends:   base,
                    HTTP,
-                   aeson
+                   aeson,
+                   hxt-unicode
