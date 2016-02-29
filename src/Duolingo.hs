@@ -16,6 +16,9 @@ import Data.String.Unicode
 import Prelude hiding (putStr)
 import Data.ByteString.Char8 (putStrLn)
 import Data.ByteString.UTF8 (fromString)
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.List.Split
 
 main :: IO ()
 main = do
@@ -27,28 +30,15 @@ main = do
 
   wordsResponse <- simpleHTTP $ setHeaders (getRequest wordsUrl) headers
   wordsJson  <- getResponseBody wordsResponse
---  print wresponse
   let wordsPacked = BS.pack wordsJson
       (Just words) = decode wordsPacked :: Maybe Words
-      toTranslate = take 10 $ map ( convert . word) (vocabulary words)
-      translateTokens = "[" ++ (intercalate "," $ map (\w -> "\"" ++ w ++ "\"") toTranslate) ++ "]"
-      translateURI = URI { uriScheme = "http:",
-                           uriAuthority = Just (URIAuth "" "d2.duolingo.com" ""),
-                           uriPath      = "/api/1/dictionary/hints/es/en?tokens=" ++ translateTokens,
-                           uriQuery = "",
-                           uriFragment  = ""}
---
---  print wordsPacked
---  print $ toTranslate \\u00e1 \\u00e9
-  mapM_ (Data.ByteString.Char8.putStrLn . Data.ByteString.UTF8.fromString) toTranslate
-  translateResponse <-  simpleHTTP $ setHeaders (mkRequest GET translateURI :: Request String) headers
-  translations <- getResponseBody translateResponse
 
-  let translationsPacked = BS.pack translations
-      (Just translationsMapAeson) = decode translationsPacked :: Maybe Transl
-      translationsMap = trans translationsMapAeson
+      toTranslateAll = map ( convert . word) (vocabulary words)
+      toTranslateChunked = chunksOf 100 toTranslateAll
 
-  print translationsMap
+--  tran <- getTranslations toTranslate headers
+--  print $  tran
+  print $ length toTranslateChunked
 
   where duolingoURL = "http://www.duolingo.com/login"
         contentType = "application/x-www-form-urlencoded"
@@ -58,6 +48,20 @@ main = do
         translateUrl = "http://www.d2.duolingo.com/api/1/dictionary/hints/es/en?tokens="
 
 
+getTranslations :: [String] -> [Header] -> IO (Map String [String])
+getTranslations words authHeaders = do
+     let translateTokens = "[" ++ (intercalate "," $ map (\w -> "\"" ++ w ++ "\"") words) ++ "]"
+         translateURI = URI { uriScheme = "http:",
+                                    uriAuthority = Just (URIAuth "" "d2.duolingo.com" ""),
+                                    uriPath      = "/api/1/dictionary/hints/es/en?tokens=" ++ translateTokens,
+                                    uriQuery = "",
+                                    uriFragment  = ""}
+     translateResponse <-  simpleHTTP $ setHeaders (mkRequest GET translateURI :: Request String) authHeaders
+     translations <- getResponseBody translateResponse
+     let translationsPacked = BS.pack translations
+         (Just translationsMapAeson) = decode translationsPacked :: Maybe Transl
+         translationsMap = trans translationsMapAeson
+     return translationsMap
 
 convert :: String -> String
 convert = concatMap repl
@@ -75,3 +79,7 @@ test = do
         print d
         print( decodeStrict d :: Maybe Wordd)
 
+--
+--  print wordsPacked
+--  print $ toTranslate \\u00e1 \\u00e9
+--  mapM_ (Data.ByteString.Char8.putStrLn . Data.ByteString.UTF8.fromString) toTranslate
