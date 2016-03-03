@@ -1,7 +1,6 @@
 module Ask where
 
 import Prelude hiding (Word)
-import Control.Applicative (liftA2)
 
 main :: IO ()
 main = do
@@ -16,7 +15,7 @@ keepAsking words = do
    let (currentWord, wordsWhichLeft) = (head words, tail words)
     userTranslation <- askTranslation $ inEnglish currentWord
     case userTranslation of
-        Just translation -> liftA2 (++) (return [scoredWord]) (keepAsking wordsWhichLeft)
+        Just translation -> fmap (++ [scoredWord]) (keepAsking wordsWhichLeft)
              where scoredWord = scoreWord currentWord translation
         Nothing -> return words
 
