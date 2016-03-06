@@ -17,15 +17,9 @@ data Word = Word {
    inEnglish :: [String],
    correctAttempts :: Int,
    wrongAttempts :: Int
-} deriving (Show, Generic)
+} deriving (Show, Generic, Eq)
 
 instance FromJSON Word where
---    parseJSON (Object v) =
---      Word <$>
---      (v .: "sp")  <*>
---      (v .: "en")  <*>
---      (v .: "cr")  <*>
---      (v .: "wr")
 
 instance ToJSON Word where
     toEncoding = genericToEncoding defaultOptions
@@ -45,7 +39,6 @@ instance FromJSON Words where
 instance FromJSON Wordd where
   parseJSON (Object v) =
     Wordd<$>
---    (v .: "normalized_string")     <*>
     (v .: "word_string")     <*>
     (fromMaybe "X" <$> v .: "gender")
 

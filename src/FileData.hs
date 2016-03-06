@@ -2,20 +2,16 @@ module FileData where
 import Json
 import Prelude hiding (Word)
 import qualified Data.ByteString.Lazy.Char8 as BS
-
+import Data.List (intercalate)
 import Data.Aeson
 
-main =   saveWordsToFile "progress3.txt" [Word "df" [] 1 3]
-
-parseFile :: FilePath -> IO [Word]
-parseFile fileName = do
-    fileContent <- readFile fileName
-    let words = linesToWords $ lines fileContent
-    return $ linesToWords $ lines fileContent
+loadWordsFromFile :: FilePath -> IO [Word]
+loadWordsFromFile fileName = do
+    fmap (linesToWords . lines) (readFile fileName)
 
 saveWordsToFile :: FilePath -> [Word] -> IO ()
 saveWordsToFile fileName words = do
-    writeFile fileName (head $ wordsToLines words)
+    writeFile fileName (intercalate "\n" (wordsToLines words))
 
 linesToWords :: [String] -> [Word]
 linesToWords = map load
@@ -24,3 +20,4 @@ linesToWords = map load
 
 wordsToLines :: [Word] -> [String]
 wordsToLines = map $ BS.unpack . encode
+

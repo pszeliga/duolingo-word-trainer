@@ -1,2 +1,2 @@
-{"inSpanish": "la", "inEnglish": [], "correctAttempts": 1, "wrongAttempts": 4 }
+{"inSpanish": "es", "inEnglish": ["dfd"], "correctAttempts": 1, "wrongAttempts": 4 }
 {"inSpanish": "l3ra", "inEnglish": [], "correctAttempts": 5, "wrongAttempts": 4 }
