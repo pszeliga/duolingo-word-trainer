@@ -12,7 +12,7 @@ main = do
 keepAsking :: [Word] -> IO [Word]
 keepAsking [] = return []
 keepAsking words = do
-    let (currentWord, wordsWhichLeft) = (head words, tail words)
+   let (currentWord, wordsWhichLeft) = (head words, tail words)
     userTranslation <- askTranslation $ inEnglish currentWord
     case userTranslation of
         Just translation -> fmap (++ [scoredWord]) (keepAsking wordsWhichLeft)
