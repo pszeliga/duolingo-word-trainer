@@ -1,13 +1,36 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 module Json where
 
+import GHC.Generics
 import Data.Text (Text)
 import Data.Aeson
 import Control.Applicative    ((<$>), (<*>))
 import Data.Maybe (fromMaybe)
 import Data.Map
+import Prelude hiding (Word)
+import Data.Monoid ((<>))
 
 
+data Word = Word {
+   inSpanish :: String,
+   inEnglish :: [String],
+   correctAttempts :: Int,
+   wrongAttempts :: Int
+} deriving (Show, Generic)
+
+instance FromJSON Word where
+--    parseJSON (Object v) =
+--      Word <$>
+--      (v .: "sp")  <*>
+--      (v .: "en")  <*>
+--      (v .: "cr")  <*>
+--      (v .: "wr")
+
+instance ToJSON Word where
+    toEncoding = genericToEncoding defaultOptions
+--     toEncoding (Word sp en cr wr) =
+--        pairs ("sp" .= sp <> "en" .= show en <> "cr" .= cr <> "wr" .= wr)
 data Words = Words { vocabulary    :: [Wordd]
                    } deriving (Show)
 data Wordd = Wordd {

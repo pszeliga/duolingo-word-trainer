@@ -1,6 +1,8 @@
 module Ask where
 
 import Prelude hiding (Word)
+import Control.Applicative (liftA2)
+import Json (Word)
 
 main :: IO ()
 main = do
@@ -12,12 +14,12 @@ main = do
 keepAsking :: [Word] -> IO [Word]
 keepAsking [] = return []
 keepAsking words = do
-   let (currentWord, wordsWhichLeft) = (head words, tail words)
+    let (currentWord, wordsWhichLeft) = (head words, tail words)
     userTranslation <- askTranslation $ inEnglish currentWord
     case userTranslation of
-        Just translation -> fmap (++ [scoredWord]) (keepAsking wordsWhichLeft)
+        Just translation -> liftA2 (:) (pure scoredWord) (keepAsking wordsWhichLeft)
              where scoredWord = scoreWord currentWord translation
-        Nothing -> return words
+        Nothing -> pure words
 
 askTranslation :: [String] -> IO (Maybe String)
 askTranslation words = do
@@ -31,9 +33,12 @@ scoreWord :: Word -> String -> Word
 scoreWord word answer | inSpanish word == answer = word { correctAttempts = (+1) (correctAttempts word) }
                       | otherwise = word { wrongAttempts = (+1) (wrongAttempts word) }
 
-data Word = Word {
-   inSpanish :: String,
-   inEnglish :: [String],
-   correctAttempts :: Int,
-   wrongAttempts :: Int
-} deriving (Show)
+
+
+
+--saveToFile :: [Word] -> IO ()
+--saveToFile words =
+
+
+
+

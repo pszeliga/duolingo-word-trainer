@@ -34,11 +34,11 @@ main = do
       (Just words) = decode wordsPacked :: Maybe Words
 
       toTranslateAll = map ( convert . word) (vocabulary words)
-      toTranslateChunked = chunksOf 100 toTranslateAll
-
+      toTranslateChunked = chunksOf 20 toTranslateAll
+  tr <- getTranslations (head toTranslateChunked) headers
 --  tran <- getTranslations toTranslate headers
 --  print $  tran
-  print $ length toTranslateChunked
+  print tr
 
   where duolingoURL = "http://www.duolingo.com/login"
         contentType = "application/x-www-form-urlencoded"
