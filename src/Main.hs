@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Duolingo where
+module Main where
 
 import Network.HTTP
 import Network.Stream
@@ -16,7 +16,6 @@ import Data.ByteString.Char8 (putStrLn)
 import Data.ByteString.UTF8 (fromString)
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.List.Split
 import Connector
 import FileData
 
@@ -28,22 +27,34 @@ main = do
   let wordsPacked = BS.pack wordsJson
       (Just words) = decode wordsPacked :: Maybe Words
       toTranslateAll = map ( convert . word) (vocabulary words)
-      toTranslateChunked = chunksOf 20 toTranslateAll
 
   wordsFromFile <- loadWordsFromFile userProgressFilePath
-  print toTranslateAll
   let untranslated = getUntranslated (map inSpanish wordsFromFile) toTranslateAll
-  print untranslated
---  tr <- getTranslations (head toTranslateChunked) headers
---  return toTranslate
+  translated <- translateWords untranslated headers
+  let translatedWords = map toWord translated
+  -- mapM_ print (translatedWords)
+
+  saveWordsToFile "progress3.txt" translatedWords
+
+  wds <- loadWordsFromFile "progress3.txt"
+  mapM_ print wds
+  print "koniec"
 
   where credentialsJson = "password=xxx&login=boneash"
         userProgressFilePath = "progress.txt"
---3. wez te obecne ktorych nie ma w pliku i przetlumacz
---4. polacz z pliku z przetlumaczonymi
+        ct = 155
+        at = 5
+
+toWord :: (String, [String]) -> Word
+-- toWord (spanish, english) = Word spanish english 0 0
+toWord (spanish, english) = Word (convert spanish) (filterForbidden english) 0 0
+
+filterForbidden :: [String] -> [String]
+filterForbidden = filter noForbidden
+            where noForbidden word = ('\8230' `notElem` word) && ('\8776' `notElem` word) && ('\233' `notElem` word)
 
 getUntranslated :: [String] -> [String] -> [String]
-getUntranslated wordsFromFile = filter (\x ->  not $ x `elem` wordsFromFile)
+getUntranslated wordsFromFile = filter (`notElem` wordsFromFile)
 
 convert :: String -> String
 convert = concatMap repl
@@ -53,10 +64,6 @@ convert = concatMap repl
         repl '\237' = "\\u00ed"
         repl '\241' = "\\u00f1"
         repl '\243' = "\\u00f3"
+        repl '\250' = "\\u00fa"
+        repl '\252' = "\\u00fc"
         repl chr = [chr]
-
-test = do
-        let t = "{\"word_string\":\"rat\\u00f3n\", \"gender\":null}"
-            d = fromString t
-        print d
-        print( decodeStrict d :: Maybe Wordd)

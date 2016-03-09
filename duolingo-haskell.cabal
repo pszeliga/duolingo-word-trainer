@@ -9,4 +9,10 @@ executable duolingo-haskell
   build-depends:   base,
                    HTTP,
                    aeson,
-                   hxt-unicode
+                   hxt-unicode,
+                   network-uri,
+                   bytestring,
+                   utf8-string,
+                   text,
+                   containers,
+                   split

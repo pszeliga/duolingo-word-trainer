@@ -4,17 +4,25 @@ import Network.URI
 import Network.BufferType
 import Network.HTTP
 import Network.Stream
-import Data.Map (Map)
+import Data.Map (Map, unions, toList)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.List (intercalate)
 import Data.Aeson
 import Json
 import Prelude hiding (Word)
+import Control.Monad (liftM)
+import Data.List.Split
 
+translateWords :: [String] -> [Header] -> IO [(String, [String])]
+translateWords untranslated headers = do
+  let chunkSize = 500
+      toTranslateChunked = chunksOf chunkSize untranslated
+      translatedSeq = mapM (`getTranslations` headers) toTranslateChunked
+  liftM (toList . unions) translatedSeq
 
 getTranslations :: [String] -> [Header] -> IO (Map String [String])
 getTranslations words authHeaders = do
-     let translateTokens = "[" ++ (intercalate "," $ map (\w -> "\"" ++ w ++ "\"") words) ++ "]"
+     let translateTokens = "[" ++ intercalate "," (map (\w -> "\"" ++ w ++ "\"") words) ++ "]"
          translateURI = URI { uriScheme = "http:",
                                     uriAuthority = Just (URIAuth "" "d2.duolingo.com" ""),
                                     uriPath      = "/api/1/dictionary/hints/es/en?tokens=" ++ translateTokens,
@@ -23,22 +31,23 @@ getTranslations words authHeaders = do
      translateResponse <-  simpleHTTP $ setHeaders (mkRequest GET translateURI :: Request String) authHeaders
      translations <- getResponseBody translateResponse
      let translationsPacked = BS.pack translations
-         (Just translationsMapAeson) = decode translationsPacked :: Maybe Transl
+    --  print translateTokens
+    --  print translationsPacked
+     let (Just translationsMapAeson) = decode translationsPacked :: Maybe Transl
          translationsMap = trans translationsMapAeson
      return translationsMap
-
 
 getAuthHeaders :: String -> IO [Header]
 getAuthHeaders credentialsJson = do
     loginResponse <- simpleHTTP (postRequestWithBody duolingoURL contentType credentialsJson)
     let (Right response) = loginResponse
         (Just authHeader) = findHeader HdrSetCookie response
-    return [(Header HdrCookie authHeader)]
+    return [Header HdrCookie authHeader]
     where duolingoURL = "http://www.duolingo.com/login"
           contentType = "application/x-www-form-urlencoded"
 
 
-getUserWords :: [Header] -> IO (String)
+getUserWords :: [Header] -> IO String
 getUserWords headers = do
     wordsResponse <- simpleHTTP $ setHeaders (getRequest wordsUrl) headers
     getResponseBody wordsResponse

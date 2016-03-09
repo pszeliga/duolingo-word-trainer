@@ -1,0 +1,4 @@
+before running the application:
+
+1. Run cmd: chcp.com 65001
+  This will let a lot of Unicode characters to be displayed properly in cmd.exe and other Windows shells .
