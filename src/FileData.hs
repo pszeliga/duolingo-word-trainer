@@ -5,13 +5,13 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.List (intercalate)
 import Data.Aeson
 
+test = loadWordsFromFile "progress3.txt"
+
 loadWordsFromFile :: FilePath -> IO [Word]
-loadWordsFromFile fileName = do
-    fmap (linesToWords . lines) (readFile fileName)
+loadWordsFromFile fileName = fmap (linesToWords . lines) (readFile fileName)
 
 saveWordsToFile :: FilePath -> [Word] -> IO ()
-saveWordsToFile fileName words = do
-    writeFile fileName (intercalate "\n" (wordsToLines words))
+saveWordsToFile fileName words = writeFile fileName (intercalate "\n" (wordsToLines words))
 
 linesToWords :: [String] -> [Word]
 linesToWords = map load
@@ -20,4 +20,3 @@ linesToWords = map load
 
 wordsToLines :: [Word] -> [String]
 wordsToLines = map $ BS.unpack . encode
-

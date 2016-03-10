@@ -15,6 +15,7 @@ import Data.Monoid ((<>))
 data Word = Word {
    inSpanish :: String,
    inEnglish :: [String],
+   genderr :: String,
    correctAttempts :: Int,
    wrongAttempts :: Int
 } deriving (Show, Generic, Eq)
@@ -29,7 +30,7 @@ data Words = Words { vocabulary    :: [Wordd]
                    } deriving (Show)
 data Wordd = Wordd {
                   word       :: String,
-                  gender     :: Text
+                  gender     :: String
                    } deriving (Show)
 
 instance FromJSON Words where
@@ -46,5 +47,3 @@ data Transl = Transl { trans :: Map String [String]} deriving (Show)
 
 instance FromJSON Transl where
     parseJSON val = Transl <$> parseJSON val
-
-

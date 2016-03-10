@@ -6,6 +6,7 @@ import Network.Stream
 import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.Text (Text)
 import Data.Aeson
+import Data.List (find)
 import Control.Applicative    ((<$>), (<*>))
 import Data.Maybe (fromMaybe)
 import Json
@@ -18,36 +19,41 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Connector
 import FileData
+import Ask
 
 --main :: IO ()
 main = do
   headers <- getAuthHeaders credentialsJson
   wordsJson <- getUserWords headers
-
+  -- print wordsJson
   let wordsPacked = BS.pack wordsJson
       (Just words) = decode wordsPacked :: Maybe Words
       toTranslateAll = map ( convert . word) (vocabulary words)
-
+  -- let wordsFromFile = []
   wordsFromFile <- loadWordsFromFile userProgressFilePath
   let untranslated = getUntranslated (map inSpanish wordsFromFile) toTranslateAll
   translated <- translateWords untranslated headers
-  let translatedWords = map toWord translated
+  let translatedWords = map (\x -> toWord x (vocabulary words)) translated
   -- mapM_ print (translatedWords)
 
-  saveWordsToFile "progress3.txt" translatedWords
+  -- saveWordsToFile "progress3.txt" translatedWords
 
-  wds <- loadWordsFromFile "progress3.txt"
-  mapM_ print wds
+  -- wordsFromFile <- loadWordsFromFile "progress3.txt"
+      -- wordsFromFile = []
+  let wordsToPractice = wordsFromFile ++ translatedWords
+
+  toPersist <- keepAsking wordsToPractice
+  saveWordsToFile "progress3.txt" toPersist
+  -- mapM_ print wordsFromFile
   print "koniec"
 
   where credentialsJson = "password=xxx&login=boneash"
-        userProgressFilePath = "progress.txt"
-        ct = 155
-        at = 5
+        userProgressFilePath = "progress3.txt"
 
-toWord :: (String, [String]) -> Word
--- toWord (spanish, english) = Word spanish english 0 0
-toWord (spanish, english) = Word (convert spanish) (filterForbidden english) 0 0
+toWord :: (String, [String]) -> [Wordd] -> Word
+toWord (spanish, english) genderReference = Word (convert spanish) (filterForbidden english) (genderr spanish genderReference) 0 0
+            where genderr spanish genderReference = let (Just wrd) = find (\x -> word x == spanish) genderReference
+                                                    in gender wrd
 
 filterForbidden :: [String] -> [String]
 filterForbidden = filter noForbidden
